@@ -1,0 +1,54 @@
+version: "3.8"
+
+services:
+  traefik:
+    image: traefik:latest
+    container_name: traefik_test
+    command:
+      - --entrypoints.web.address=:80
+      - --entrypoints.web-secure.address=:443
+      - --providers.docker
+      - --api.dashboard=true
+      - --api.insecure=true
+      - --certificatesResolvers.letsencrypt.acme.email=admin@example.com
+      - --certificatesResolvers.letsencrypt.acme.storage=/letsencrypt/acme.json #acme.json -> chmod 600 acme.json
+      - --certificatesResolvers.letsencrypt.acme.httpChallenge.entryPoint=web
+      - --certificatesResolvers.letsencrypt.acme.tlsChallenge=true
+    ports:
+      - "80:80" #http
+      - "443:443" #https
+      - "8080:8080" #for the Dashboard !!NO SSL!! !!UNSECURE!!
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./letsencrypt:/letsencrypt
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.traefik.rule=Host(`traefik.example.com`)
+      - traefik.http.routers.traefik.entrypoints=web
+      - traefik.http.routers.traefik.middlewares=traefik-redirect
+      - traefik.http.routers.traefik-secure.rule=Host(`traefik.example.com`)
+      - traefik.http.routers.traefik-secure.entrypoints=web-secure
+      - traefik.http.routers.traefik-secure.tls=true
+      - traefik.http.routers.traefik-secure.tls.certresolver=letsencrypt
+      - traefik.http.middlewares.traefik-redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.traefik-redirect.redirectscheme.permanent=true
+        #- "traefik.http.routers.dashboard.rule=Host(`traefik.example.com`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
+        #- "traefik.http.routers.dashboard.service=api@internal"
+        #- "traefik.http.routers.dashboard.middlewares=auth"
+        #- "traefik.http.middlewares.auth.basicauth.users=byli:testtesttest"
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx_test
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.nginx.rule=Host(`nginx.example.com`)
+      - traefik.http.routers.nginx.entrypoints=web
+      - traefik.http.routers.nginx.middlewares=nginx-redirect
+      - traefik.http.routers.nginx-secure.rule=Host(`nginx.example.com`)
+      - traefik.http.routers.nginx-secure.entrypoints=web-secure
+      - traefik.http.routers.nginx-secure.tls=true
+      - traefik.http.routers.nginx-secure.tls.certresolver=letsencrypt
+      - traefik.http.middlewares.nginx-redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.nginx-redirect.redirectscheme.permanent=true
