@@ -6,7 +6,7 @@ services:
     environment:
       EULA: "true"
       VERSION: 1.21.3 #pinned version
-      TYPE: „PAPER“ #default Vanilla
+      TYPE: „PAPER“ #default Vanilla, Plugin Server: https://papermc.io
       MEMORY: "4G" #low Player Amount
     ports:
       - "25565:25565" #default Minecraft Port
