@@ -1,0 +1,21 @@
+---
+services:
+  mc:
+    container_name: minecraftServer
+    image: itzg/minecraft-server:latest
+    environment:
+      EULA: "true"
+      VERSION: 1.21.3 #pinned version
+      TYPE: „PAPER“ #default Vanilla
+      MEMORY: "4G" #low Player Amount
+    ports:
+      - "25565:25565" #default Minecraft Port
+    volumes:
+      - extVol:/data #external Volume
+      - /etc/timezone:/etc/timezone:ro #timezone for Logs, not necessary
+    restart: unless-stopped
+
+volumes:
+  extVol:
+    external: true
+...
